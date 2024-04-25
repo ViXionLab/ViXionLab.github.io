@@ -1,0 +1,243 @@
+<!doctype html>
+<!--
+Copyright 2024 Kazunori Asada. All Rights Reserved.
+-->
+<html>
+	<head>
+		<title>ViXion01 - Web Edition</title>
+		<meta name="description" content="Monitor / Control ViXion01 via Web Bluetooth.">
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+
+		<script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+
+		<!-- Polymer components -->
+		<link rel="import" href="bower_components/paper-progress/paper-progress.html">
+		<link rel="import" href="bower_components/paper-slider/paper-slider.html">
+		<link rel="import" href="bower_components/paper-button/paper-button.html">
+		<link rel="import" href="bower_components/paper-card/paper-card.html">
+		<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+		<link rel="import" href="bower_components/paper-checkbox/paper-checkbox.html">
+		<!-- <link rel="import" href="bower_components/iron-icon/iron-icon.html"> -->
+		<!-- <link rel="import" href="bower_components/iron-icons/iron-icons.html"> -->
+		<link rel="import" href="bower_components/platinum-bluetooth/platinum-bluetooth-elements.html">
+		<link rel="import" href="bower_components/paper-styles/color.html">
+		<link rel="stylesheet" href="bower_components/paper-styles/demo.css">
+
+		<script src="https://code.jquery.com/jquery-3.2.1.js"></script>                         
+		<link href="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.css" rel="stylesheet" />               
+		<script src="https://cdn.jsdelivr.net/npm/round-slider@1.6.1/dist/roundslider.min.js"></script>
+		<script src="./web01.js"></script>                         
+
+		<style is="custom-style">
+			paper-progress {
+				width: 100%;
+			}
+			paper-progress.blue {
+				--paper-progress-active-color: var(--paper-light-blue-500);
+				--paper-progress-secondary-color: var(--paper-light-blue-100);
+			}
+			paper-slider {
+				width: 100%;
+			}
+			paper-slider.blue {
+				--paper-slider-active-color: var(--paper-light-blue-500);
+				--paper-slider-knob-color: var(--paper-light-blue-500);
+			}
+			paper-slider.red {
+				--paper-slider-active-color: var(--paper-red-500);
+				--paper-slider-knob-color: var(--paper-red-500);
+			}
+			paper-slider.green {
+				--paper-slider-active-color: var(--paper-green-500);
+				--paper-slider-knob-color: var(--paper-green-500);
+			}
+			paper-button {
+				display: block;
+				margin-bottom: 24px;
+			}
+			paper-button.colorful {
+				color: #4285f4;
+			}
+			paper-button[raised].colorful {
+				background: #4285f4;
+				color: #fff;
+			}
+			paper-button.manual {
+				background: #067e32;
+				color: #fff;
+			}
+			paper-button.auto {
+				background: #d5634c;
+				color: #fff;
+			}
+			paper-button.off {
+				background: #757575;
+				color: #fff;
+			}
+			paper-button[toggles] {
+				transition: background-color 0.3s;
+			}
+			paper-button[toggles][active] {
+				background-color: rgba(0, 0, 0, 0.25);
+			}
+			paper-button[toggles][active].colorful {
+				background-color: rgba(66, 133, 244, 0.25);
+			}
+			paper-button[toggles][active][raised].colorful {
+				background-color: rgba(66, 133, 244, 0.75);
+			}
+			paper-button.blue {
+				color: var(--paper-light-blue-500);
+				--paper-button-flat-focus-color: var(--paper-light-blue-50);
+			}
+			body {
+				background-color: var(--paper-grey-50);
+			}
+			#cards {
+				margin-left: auto;
+				margin-right: auto;
+				max-width: 400px;
+			}
+			paper-card {
+				margin-bottom: 16px;
+				width: 100%;
+			}
+			/* クリアーフィックス （回り込みの影響を解除する） */
+			.row:after {
+				content: "";
+				display: block;
+				clear: both;
+			}
+			/* カラムの回り込み設定 左マージン設定 */
+			.col {
+				float: left;
+				margin-left: 3.2%;
+			}
+			/* 左端のカラムの左マージンを削除 */
+			.col:first-child{
+			margin-left: 0;
+			}
+			/* 各カラムの幅を％で設定 */
+			.one-second {width: 48.4%;}
+			.one-third {width: 31.2%;}
+			.one-fourth {width: 22.6%;}
+			.fontSmall {font-size: 10px;}
+			#leftDegreeSlider {
+				margin-left: auto;
+				margin-right: auto;
+				margin-top: -10px;
+				padding: 10px;
+				scale: 75%;
+				transform: scale(1, -1);
+			}
+			#rightDegreeSlider {
+				margin-left: auto;
+				margin-right: auto;
+				margin-top: -10px;
+				padding: 10px;
+				scale: 75%;
+				transform: scale(-1, -1);
+			}
+			#diopter {
+				margin-top: 20px;
+			}
+
+		</style>
+	</head>
+  	<body unresolved>
+		<div id="cards">
+			<paper-card heading="ViXion01" image="0101.jpg">
+				<div class="card-content">
+					<p id="versionText" style="float:right"></p>
+					<paper-progress id="progress" indeterminate></paper-progress>
+				</div>
+			</paper-card>
+
+			<paper-card>
+				<div class="card-content">
+					<paper-button id="connectButton" raised class="colorful">connect</paper-button>
+				</div>
+			</paper-card>
+
+			<paper-card>
+				<div class="card-content">
+					<div class="row">
+						<div class="fontSmall">
+							<div class="col one-third">
+								<paper-button id="temperButton" class="colorful">温度</paper-button>
+							</div>
+							<div class="col one-third">
+								<paper-button id="luxButton" class="colorful">照度</paper-button>
+							</div>
+							<div class="col one-third">
+								<paper-button id="batteryButton" class="colorful">バッテリー</paper-button>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="fontSmall">
+							<div class="col one-second">
+								<paper-button id="autoButton" class="off">Auto</paper-button>
+							</div>
+							<!--
+							<div class="col one-fourth">
+								<paper-button id="autoLButton" class="off">Auto-L</paper-button>
+							</div>
+							-->
+							<div class="col one-second">
+								<paper-button id="manualButton" class="off">Man</paper-button>
+							</div>
+							<!--
+							<div class="col one-fourth">
+								<paper-button id="manualLButton" class="off">Man-L</paper-button>
+							</div>
+							-->
+						</div>
+					</div>
+					<div class="center horizontal layout">
+						<div>Distance (cm): <span id="distanceLabel" class="caption"></span></div>
+						<paper-slider id="distanceSlider" class="red" value="0" min="0" max="200" step="1"></paper-slider>
+
+						<!--
+						<div>Right Lens Degree: <span id="rightLabel" class="caption"></span></div>
+						<paper-slider id="rightDiopterSlider" class="blue" value="0" min="-20" max="20" step="0.1"></paper-slider>
+						<div>Left Lens Degree: <span id="leftLabel" class="caption"></span></div>
+						<paper-slider id="leftDiopterSlider" class="blue" value="0" min="-20" max="20" step="0.1"></paper-slider>
+						-->
+						<div id="diopter" class="row">
+							<div class="col one-second">
+								<div>Left Lens Degree: <span id="leftLabel" class="caption"></span></div>
+								<div id="leftDegreeSlider"></div>
+							</div>
+							<div class="col one-second">
+								<div>Right Lens Degree: <span id="rightLabel" class="caption"></span></div>
+								<div id="rightDegreeSlider"></div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</paper-card>
+
+			<paper-card>
+				<div class="card-content">
+					<div class="center horizontal layout">
+						<div>Right Lens Caribration<paper-checkbox checked style="float:right" id="syncCheckbox">sync</paper-checkbox></div>
+						<paper-slider id="rightCaribSlider" class="green" value="0" min="-113" max="113" step="1" editable></paper-slider>
+						<div>Left Lens Caribration</div>
+						<paper-slider id="leftCaribSlider" class="green" value="0" min="-113" max="113" step="1" editable></paper-slider>
+					</div>
+				</div>
+			</paper-card>
+
+			<paper-dialog id="dialog">
+				<h2>Error</h2>
+				<p>Could not connect to bluetooth device!</p>
+			</paper-dialog>
+		</div>
+	</body>
+</html>
